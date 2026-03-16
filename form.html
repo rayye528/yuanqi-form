@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>表单提交</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+    }
+    body {
+      max-width: 600px;
+      margin: 30px auto;
+      padding: 0 20px;
+      background: #f6f8fa;
+    }
+    .form-box {
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    h2 {
+      margin-bottom: 20px;
+      text-align: center;
+      color: #333;
+    }
+    .form-item {
+      margin-bottom: 18px;
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+      color: #333;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 16px;
+    }
+    textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+    button {
+      width: 100%;
+      padding: 14px;
+      background: #2da44e;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #2c974b;
+    }
+  </style>
+</head>
+<body>
+
+<div class="form-box">
+  <h2>表单提交</h2>
+  <form onsubmit="submitForm(event)">
+    <div class="form-item">
+      <label>标题</label>
+      <input type="text" id="title" placeholder="请输入标题" required>
+    </div>
+    <div class="form-item">
+      <label>内容</label>
+      <textarea id="content" placeholder="请输入内容" required></textarea>
+    </div>
+    <button type="submit">提交到 GitHub</button>
+  </form>
+</div>
+
+<script>
+function submitForm(e) {
+  e.preventDefault();
+
+  const title = document.getElementById("title").value.trim();
+  const content = document.getElementById("content").value.trim();
+
+  if (!title || !content) {
+    alert("请填写完整信息");
+    return;
+  }
+
+  const issueTitle = encodeURIComponent(title);
+  const issueBody = encodeURIComponent(content);
+
+  // 跳转至私有仓库 yuanqi 的 Issue 提交页（核心：仓库私有不影响这个链接访问）
+  const url = `https://github.com/rayye528/yuanqi/issues/new?title=${issueTitle}&body=${issueBody}`;
+
+  // 强制新标签打开，避免被拦截
+  window.open(url, "_blank");
+
+  alert("提交成功！已跳转到 GitHub 发布页面～");
+}
+</script>
+
+</body>
+</html>
