@@ -50,21 +50,23 @@ textarea{min-height:120px}
 
 <script>
 function submit() {
-  const dramaName = document.getElementById("dramaName").value.trim();
-  const totalEpisodes = document.getElementById("totalEpisodes").value.trim();
-  const totalDuration = document.getElementById("totalDuration").value.trim();
-  const maleLeadName = document.getElementById("maleLeadName").value.trim();
-  const maleLeadIntro = document.getElementById("maleLeadIntro").value.trim();
-  const femaleLeadName = document.getElementById("femaleLeadName").value.trim();
-  const femaleLeadIntro = document.getElementById("femaleLeadIntro").value.trim();
-  const videoIntro = document.getElementById("videoIntro").value.trim();
-  const netdiskLink = document.getElementById("netdiskLink").value.trim();
+  const d = document.getElementById.bind(document);
 
-  if (!dramaName) {
-    alert("请填写剧名！");
-    return;
-  }
+  // 读取表单数据
+  const dramaName = d("dramaName").value.trim();
+  const totalEpisodes = d("totalEpisodes").value.trim();
+  const totalDuration = d("totalDuration").value.trim();
+  const maleLeadName = d("maleLeadName").value.trim();
+  const maleLeadIntro = d("maleLeadIntro").value.trim();
+  const femaleLeadName = d("femaleLeadName").value.trim();
+  const femaleLeadIntro = d("femaleLeadIntro").value.trim();
+  const videoIntro = d("videoIntro").value.trim();
+  const netdiskLink = d("netdiskLink").value.trim();
 
+  // 校验必填项
+  if (!dramaName) { alert("请填写剧名！"); return; }
+
+  // 拼接投稿内容
   const body = `
 ## 剧名
 ${dramaName}
@@ -72,40 +74,45 @@ ${dramaName}
 ## 总集数
 ${totalEpisodes}
 
-## 总时长(分钟)
-${totalDuration}
+## 总时长
+${totalDuration} 分钟
 
-## 男主名
-${maleLeadName}
+## 男主信息
+姓名：${maleLeadName}
+简介：${maleLeadIntro}
 
-## 男主简介
-${maleLeadIntro}
-
-## 女主名
-${femaleLeadName}
-
-## 女主简介
-${femaleLeadIntro}
+## 女主信息
+姓名：${femaleLeadName}
+简介：${femaleLeadIntro}
 
 ## 视频简介
 ${videoIntro}
 
 ## 网盘链接
 ${netdiskLink}
+
+## 提交时间
+${new Date().toLocaleString()}
 `;
 
-  const title = encodeURIComponent("投稿：" + dramaName);
-  const bodyEncoded = encodeURIComponent(body);
+  // 核心：私有仓库专属投稿链接（无需外部选项，直接用）
+  const baseUrl = "https://github.com/rayye528/yuanqi/issues/new";
+  const url = baseUrl
+    + "?title=" + encodeURIComponent("投稿：" + dramaName)
+    + "&body=" + encodeURIComponent(body)
+    + "&labels=用户投稿"
+    + "&assignee=rayye528";
 
-  // 👇 这是最终正确的跳转链接
-  const url = `https://github.com/rayye528/yuanqi/issues/new?template=tougao.md&title=${title}&body=${bodyEncoded}`;
-
-  document.getElementById("toast").style.display = "block";
-
+  // 显示提示并跳转
+  d("toast").style.display = "block";
   setTimeout(() => {
-    window.open(url, "_blank");
-    document.getElementById("toast").style.display = "none";
-  }, 800);
+    const newTab = window.open(url, "_blank");
+    // 检测弹窗拦截
+    if (!newTab) {
+      alert("弹窗被拦截！请复制以下链接提交：\n" + url);
+    }
+    d("toast").style.display = "none";
+  }, 700);
 }
 </script>
 </body>
