@@ -18,7 +18,8 @@ input,textarea{width:100%;padding:15px;border:1px solid #ddd;border-radius:8px;f
 textarea{min-height:120px}
 #submitBtn{padding:16px 60px;background:#27ae60;color:#fff;border:none;border-radius:8px;font-size:18px;cursor:pointer}
 #submitBtn:disabled{background:#999}
-#toast{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.8);color:#fff;padding:20px 40px;border-radius:10px;display:none}
+#toast{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.8);color:#fff;padding:20px 40px;border-radius:10px;display:none;z-index:9999}
+#loginTip{color:#666;margin-top:10px;font-size:14px}
 </style>
 </head>
 <body>
@@ -44,33 +45,38 @@ textarea{min-height:120px}
     <div class="item"><label>视频简介</label><textarea id="videoIntro" required></textarea></div>
     <div class="item"><label>网盘链接</label><input id="netdiskLink" required></div>
     <button id="submitBtn" onclick="submit()">提交投稿</button>
+    <div id="loginTip">📌 提交前请确保已登录GitHub账号</div>
   </div>
 </div>
-<div id="toast">提交成功</div>
+<div id="toast">正在跳转至GitHub提交页面...</div>
 
 <script>
 function submit() {
   const btn = document.getElementById("submitBtn");
   const toast = document.getElementById("toast");
 
-  // 先校验必填项（避免空提交）
-  const requiredFields = [
-    "dramaName", "totalEpisodes", "totalDuration", 
-    "maleLeadName", "maleLeadIntro", "femaleLeadName", 
-    "femaleLeadIntro", "videoIntro", "netdiskLink"
+  // 1. 校验必填项
+  const fields = [
+    {id: "dramaName", name: "剧名"},
+    {id: "totalEpisodes", name: "总集数"},
+    {id: "totalDuration", name: "总时长"},
+    {id: "maleLeadName", name: "男主名"},
+    {id: "maleLeadIntro", name: "男主简介"},
+    {id: "femaleLeadName", name: "女主名"},
+    {id: "femaleLeadIntro", name: "女主简介"},
+    {id: "videoIntro", name: "视频简介"},
+    {id: "netdiskLink", name: "网盘链接"}
   ];
-  for (const field of requiredFields) {
-    const value = document.getElementById(field).value.trim();
+
+  for (const field of fields) {
+    const value = document.getElementById(field.id).value.trim();
     if (!value) {
-      alert(`请填写【${document.querySelector(`label[for="${field}"]`)?.innerText || field}】`);
+      alert(`请填写【${field.name}】`);
       return;
     }
   }
 
-  btn.disabled = true;
-  btn.innerText = "提交中...";
-
-  // 读取用户填写内容
+  // 2. 读取表单数据
   const dramaName = document.getElementById("dramaName").value;
   const totalEpisodes = document.getElementById("totalEpisodes").value;
   const totalDuration = document.getElementById("totalDuration").value;
@@ -82,8 +88,8 @@ function submit() {
   const netdiskLink = document.getElementById("netdiskLink").value;
   const submitTime = new Date().toLocaleString();
 
-  // 拼接成 GitHub Issue 内容
-  const body = `
+  // 3. 拼接Issue内容（转义特殊字符，避免链接失效）
+  const body = encodeURIComponent(`
 **剧名**: ${dramaName}
 **总集数**: ${totalEpisodes}
 **总时长**: ${totalDuration} 分钟
@@ -94,22 +100,35 @@ function submit() {
 **视频简介**: ${videoIntro}
 **网盘链接**: ${netdiskLink}
 **提交时间**: ${submitTime}
-  `;
+  `);
+  const title = encodeURIComponent("投稿：" + dramaName);
 
-  // 跳转到私有仓库 yuanqi 的 Issue 提交页（核心优化：用window.open避免跳转拦截）
-  const url = new URL("https://github.com/rayye528/yuanqi/issues/new");
-  url.searchParams.append("title", "投稿：" + dramaName);
-  url.searchParams.append("body", body);
+  // 4. 构建跳转链接（直接拼接，避免URL对象的兼容性问题）
+  const url = `https://github.com/rayye528/yuanqi/issues/new?title=${title}&body=${body}`;
 
-  // 显示成功提示，1秒后强制新开标签跳转（关键修复：避免跳转失效）
+  // 5. 立即跳转（去掉延时，避免弹窗拦截）
+  btn.disabled = true;
+  btn.innerText = "提交中...";
   toast.style.display = "block";
-  setTimeout(() => {
-    window.open(url.toString(), "_blank"); // 替换原location.href，100%不被拦截
-    // 恢复按钮状态
+
+  // 核心修复：立即打开新标签，不延时
+  const newTab = window.open(url, "_blank");
+  
+  // 检测弹窗是否被拦截
+  if (!newTab || newTab.closed || typeof newTab.closed === 'undefined') {
+    alert("⚠️ 弹窗被浏览器拦截！请允许弹窗后重新提交，或手动复制链接访问：\n" + url);
     btn.disabled = false;
     btn.innerText = "提交投稿";
     toast.style.display = "none";
-  }, 1000);
+    return;
+  }
+
+  // 6. 完成跳转后的状态恢复
+  setTimeout(() => {
+    toast.style.display = "none";
+    btn.disabled = false;
+    btn.innerText = "提交投稿";
+  }, 2000);
 }
 </script>
 </body>
